@@ -39,7 +39,7 @@ const MascotAndFood: React.FC<MascotAndFoodProps> = memo(
           }}
         >
           {!isCompleted ? (
-            <Mascot className="-right-[330px] relative top-[130px] h-[701.85px] w-[720.28px]" />
+            <Mascot className="-right-[400px] relative top-[70px] h-[701.85px] w-[720.28px]" />
           ) : (
             <Mascot
               className="-top-[200px] relative right-[200px] h-[604.54px] w-[620.02px]"
@@ -77,7 +77,7 @@ const Demo: React.FC<DemoProps> = ({ isOpen }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 z-10 bg-white bg-opacity-60"
+            className="absolute inset-0 z-10 bg-white bg-opacity-80 backdrop-blur-md"
           />
         )}
       </AnimatePresence>

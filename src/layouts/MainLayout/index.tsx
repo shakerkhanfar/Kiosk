@@ -8,7 +8,6 @@ import { BackgroundBeams } from "@/components/ui/background-beams";
 import Footer from "@/components/Footer";
 import ExitButton from "@/components/ExitButton";
 import SettingsPanel from "@/components/SettingsPanel";
-import KioskFullscreen from "@/components/KioskFullscreen";
 import useVoiceAgent from "@/voice-agent/useVoiceAgent";
 import { useKioskStore } from "@/store/kioskStore";
 
@@ -49,12 +48,6 @@ const MainLayout: React.FC = () => {
     setIsOpen(false);
   };
 
-  // A running session takes over the whole window — the marketing page is the
-  // entry point, not part of the kiosk itself.
-  if (isOpen && !isSmallScreen) {
-    return <KioskFullscreen onExit={handleExit} />;
-  }
-
   return (
     <div className="relative h-screen w-full overflow-hidden bg-[#E8F0F9]">
       <BackgroundBeams />
@@ -92,7 +85,7 @@ const MainLayout: React.FC = () => {
         transition={{ duration: 1.5, delay: 1 }}
         className="absolute inset-0"
       >
-        <Demo isOpen={false} />
+        <Demo isOpen={isOpen} />
       </motion.div>
 
       <AnimatePresence>
@@ -114,7 +107,25 @@ const MainLayout: React.FC = () => {
       </AnimatePresence>
 
       <ExitButton />
-      <SettingsPanel />
+      {!isOpen && <SettingsPanel />}
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.button
+            type="button"
+            onClick={handleExit}
+            className="absolute top-5 right-5 z-[95] rounded-full bg-black/80 px-5 py-2 font-baloo2 text-[13px] text-white"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            End session
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
