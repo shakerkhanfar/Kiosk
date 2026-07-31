@@ -7,16 +7,22 @@ import Body from "@/components/Body";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import Footer from "@/components/Footer";
 import ExitButton from "@/components/ExitButton";
+import SettingsPanel from "@/components/SettingsPanel";
+import KioskFullscreen from "@/components/KioskFullscreen";
 import useVoiceAgent from "@/voice-agent/useVoiceAgent";
 import { useKioskStore } from "@/store/kioskStore";
 
 const MainLayout: React.FC = () => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { startAgent } = useVoiceAgent();
-  const { selectLanguage } = useKioskStore((state) => ({
-    selectLanguage: state.selectLanguage,
-  }));
+  const { startAgent, endAgent } = useVoiceAgent();
+  const { selectLanguage, resetOrder, removeCategory } = useKioskStore(
+    (state) => ({
+      selectLanguage: state.selectLanguage,
+      resetOrder: state.resetOrder,
+      removeCategory: state.removeCategory,
+    }),
+  );
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -34,6 +40,20 @@ const MainLayout: React.FC = () => {
     selectLanguage(language);
     startAgent(language);
   };
+
+  /** Ends the call and returns to the landing page with a clean slate. */
+  const handleExit = () => {
+    endAgent();
+    resetOrder();
+    removeCategory();
+    setIsOpen(false);
+  };
+
+  // A running session takes over the whole window — the marketing page is the
+  // entry point, not part of the kiosk itself.
+  if (isOpen && !isSmallScreen) {
+    return <KioskFullscreen onExit={handleExit} />;
+  }
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-[#E8F0F9]">
@@ -72,7 +92,7 @@ const MainLayout: React.FC = () => {
         transition={{ duration: 1.5, delay: 1 }}
         className="absolute inset-0"
       >
-        <Demo isOpen={isOpen} />
+        <Demo isOpen={false} />
       </motion.div>
 
       <AnimatePresence>
@@ -94,6 +114,7 @@ const MainLayout: React.FC = () => {
       </AnimatePresence>
 
       <ExitButton />
+      <SettingsPanel />
     </div>
   );
 };

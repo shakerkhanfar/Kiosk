@@ -65,14 +65,15 @@ const CartItemCard: React.FC<OrderItem> = ({
 const Cart: React.FC = () => {
   const currentOrder = useKioskStore((state) => state.currentOrder);
   const showOrderSummary = useKioskStore((state) => state.showOrderSummary);
-  const completeOrder = useKioskStore((state) => state.completeOrder);
+  const beginConfirmation = useKioskStore((state) => state.beginConfirmation);
   const { total, itemsTotal, deliveryCost } = showOrderSummary();
 
   /**
-   * Handles the "Complete order" button click.
+   * Handles the "Complete order" button click — sends the order to the
+   * confirmation screen rather than finalising it directly.
    */
   const handleCompleteOrderClick = () => {
-    completeOrder();
+    beginConfirmation();
   };
 
   return (

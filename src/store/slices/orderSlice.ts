@@ -1,7 +1,6 @@
 import { getMenuItemObject } from "@/lib/utils";
 import type { StateCreator } from "zustand";
 import type { Item } from "../types";
-import { agent } from "@/voice-agent/useVoiceAgent";
 const isTestEnv = process.env.NODE_ENV === "test";
 
 /**
@@ -28,7 +27,21 @@ export interface OrderSummary {
 export interface OrderSlice {
   currentOrder: OrderItem[];
   isCompleted: boolean;
+  /** True while the order is on the review screen, awaiting confirmation. */
+  isConfirming: boolean;
   cloneItem: Item | null;
+
+  /**
+   * Puts the order on the confirmation screen for review.
+   *
+   * @returns A summary of the order awaiting confirmation.
+   */
+  beginConfirmation: () => OrderSummary;
+
+  /**
+   * Leaves the confirmation screen and returns to ordering.
+   */
+  cancelConfirmation: () => void;
 
   /**
    * Adds an item to the current order.
@@ -95,7 +108,30 @@ export interface OrderSlice {
 export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
   currentOrder: [],
   isCompleted: false,
+  isConfirming: false,
   cloneItem: null,
+
+  /**
+   * Puts the order on the confirmation screen for review.
+   *
+   * @returns A summary of the order awaiting confirmation.
+   */
+  beginConfirmation: () => {
+    if (get().currentOrder.length === 0) {
+      throw new Error("Error: Cannot confirm an empty order.");
+    }
+    set({ isConfirming: true });
+    console.log("Order is awaiting confirmation.");
+    return get().showOrderSummary();
+  },
+
+  /**
+   * Leaves the confirmation screen and returns to ordering.
+   */
+  cancelConfirmation: () => {
+    set({ isConfirming: false });
+    console.log("Order confirmation was dismissed.");
+  },
 
   /**
    * Adds an item to the current order. If the item already exists in the order, it updates the quantity.
@@ -113,13 +149,13 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
     }
 
     const existingItem = get().currentOrder.find(
-      (orderItem) => orderItem.id === itemId
+      (orderItem) => orderItem.id === itemId,
     );
 
     const setCurrentOrder = () => {
       set((state) => {
         const existingItemIndex = state.currentOrder.findIndex(
-          (orderItem) => orderItem.id === itemId
+          (orderItem) => orderItem.id === itemId,
         );
 
         if (existingItemIndex !== -1) {
@@ -183,7 +219,7 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
     }
 
     const existingOrderItem = get().currentOrder.find(
-      (orderItem) => orderItem.id === itemId
+      (orderItem) => orderItem.id === itemId,
     );
 
     if (!existingOrderItem) {
@@ -196,9 +232,7 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
 
     set((state) => ({
       currentOrder: state.currentOrder.map((orderItem) =>
-        orderItem.id === itemId
-          ? { ...orderItem, quantity }
-          : orderItem
+        orderItem.id === itemId ? { ...orderItem, quantity } : orderItem,
       ),
     }));
     console.log(`Edited item in order: ${itemId} to quantity ${quantity}`);
@@ -211,19 +245,15 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
    */
   removeItemFromOrder: (itemId: string) => {
     const existingOrderItem = get().currentOrder.find(
-      (orderItem) => orderItem.id === itemId
+      (orderItem) => orderItem.id === itemId,
     );
 
     if (!existingOrderItem) {
-      throw new Error(
-        `Error: Item with id ${itemId} not found in order.`
-      );
+      throw new Error(`Error: Item with id ${itemId} not found in order.`);
     }
 
     set((state) => ({
-      currentOrder: state.currentOrder.filter(
-        (item) => item.id !== itemId
-      ),
+      currentOrder: state.currentOrder.filter((item) => item.id !== itemId),
     }));
     console.log(`Removed item from order: ${itemId}`);
   },
@@ -237,7 +267,7 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
     const currentOrder = get().currentOrder;
     const itemsTotal = currentOrder.reduce(
       (sum, item) => sum + item.price * item.quantity,
-      0
+      0,
     );
     const deliveryCost = 0.5; // Fixed delivery cost, adjust as needed
     const total = itemsTotal + deliveryCost;
@@ -261,13 +291,10 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
       throw new Error("Error: Cannot complete an empty order.");
     }
 
-    // End the agent on complete order in non-test environments
-    if (!isTestEnv) {
-      agent.end();
-    }
-
+    // Ending the call is the caller's job (the confirm_order tool delays it so
+    // the agent can finish announcing the order number and total).
     const orderSummary = get().showOrderSummary();
-    set({ isCompleted: true, currentOrder: [] });
+    set({ isCompleted: true, isConfirming: false, currentOrder: [] });
     console.log("Order completed successfully.");
     return orderSummary;
   },
@@ -281,7 +308,7 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
       throw new Error("Error: No order to cancel.");
     }
 
-    set({ currentOrder: [], isCompleted: false });
+    set({ currentOrder: [], isCompleted: false, isConfirming: false });
     console.log("Order was cancelled.");
   },
 
@@ -289,7 +316,7 @@ export const createOrderSlice: StateCreator<OrderSlice> = (set, get) => ({
    * Resets the order and sets isCompleted to false.
    */
   resetOrder: () => {
-    set({ currentOrder: [], isCompleted: false });
+    set({ currentOrder: [], isCompleted: false, isConfirming: false });
     console.log("Order has been reset.");
   },
 });
