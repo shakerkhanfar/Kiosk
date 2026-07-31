@@ -1,0 +1,19 @@
+# Replit run configuration.
+# Installs dependencies on first run, then serves the Vite dev server.
+# --host binds 0.0.0.0 so Replit's proxy can reach it.
+run = ["sh", "-c", "corepack enable >/dev/null 2>&1; [ -d node_modules ] || yarn install --frozen-lockfile; yarn dev --host"]
+entrypoint = "src/main.tsx"
+hidden = [".config", "node_modules", "dist"]
+
+modules = ["nodejs-20"]
+
+# Map Vite's dev port to the public URL.
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+# Optional: Replit static deployment (build once, serve dist/).
+[deployment]
+build = ["sh", "-c", "corepack enable >/dev/null 2>&1; yarn install --frozen-lockfile && yarn build"]
+publicDir = "dist"
+deploymentTarget = "static"
