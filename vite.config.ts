@@ -16,6 +16,8 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5000,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore – allowedHosts exists at runtime in Vite 5.4+ but is missing from older type stubs
     allowedHosts: true,
   },
 });
