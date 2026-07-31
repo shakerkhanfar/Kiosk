@@ -1,38 +1,19 @@
-modules = ["nodejs-20", "web", "bash"]
+# Replit run configuration.
+# Installs dependencies on first run, then serves the Vite dev server.
+# --host binds 0.0.0.0 so Replit's proxy can reach it.
+run = ["sh", "-c", "corepack enable >/dev/null 2>&1; [ -d node_modules ] || yarn install --frozen-lockfile; yarn dev --host"]
+entrypoint = "src/main.tsx"
+hidden = [".config", "node_modules", "dist"]
 
-[nix]
-channel = "stable-25_05"
+modules = ["nodejs-20"]
 
-[agent]
-expertMode = true
-
-[workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "yarn dev"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
+# Map Vite's dev port to the public URL.
 [[ports]]
-localPort = 5000
+localPort = 5173
 externalPort = 80
 
+# Optional: Replit static deployment (build once, serve dist/).
 [deployment]
-deploymentTarget = "cloudrun"
+build = ["sh", "-c", "corepack enable >/dev/null 2>&1; yarn install --frozen-lockfile && yarn build"]
+publicDir = "dist"
+deploymentTarget = "static"
